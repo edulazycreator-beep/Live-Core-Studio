@@ -51,14 +51,14 @@ int Engine::run() {
     // capture, compositing and output against it; for now it proves the
     // real-time thread runs and is reported through Status.
     std::jthread clock([this](std::stop_token st) {
-        using clock_t = std::chrono::steady_clock;
+        using steady = std::chrono::steady_clock;
         const auto period = std::chrono::nanoseconds(1'000'000'000LL / std::max(1, options_.clockRateHz));
-        auto next = clock_t::now();
+        auto next = steady::now();
         while (!st.stop_requested()) {
             next += period;
             std::this_thread::sleep_until(next);
             clockTicks_.fetch_add(1, std::memory_order_relaxed);
-            const auto now = clock_t::now();
+            const auto now = steady::now();
             if (now - next > period * 10) next = now;  // resync after a stall instead of bursting
         }
     });
