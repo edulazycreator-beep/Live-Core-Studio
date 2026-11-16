@@ -33,6 +33,17 @@ Build the native engine **before** the .NET solution, so `LiveCoreStudio.App` ca
 
 Opening `LiveCoreStudio.sln` in Visual Studio works for the managed side; open the folder (CMake mode) for the native side.
 
+## Continuous integration (GitHub Actions)
+
+`.github/workflows/build.yml` runs on every push to `main` and on pull requests:
+
+| Job | Runner | What it does |
+|---|---|---|
+| Windows (MSVC + WPF) | `windows-latest` | MSVC `/W4 /WX` engine build (Debug + Release), CTest, full `LiveCoreStudio.sln` build incl. WPF (warnings as errors), managed unit + integration tests over real named pipes, uploads the app (with the engine next to it) as an artifact |
+| Linux | `ubuntu-latest` | `scripts/build-ci-linux.sh`, including the MinGW Win32 compile check |
+
+The uploaded app is framework-dependent: install the **.NET 10 Desktop Runtime (x64)** on the target PC, unzip the artifact and run `LiveCoreStudio.exe`.
+
 ## Linux (CI only)
 
 Builds the portable engine core, the managed core libraries and runs every test that does not need Windows, including real C#↔C++ integration tests over a Unix socket. If MinGW-w64 is installed it also cross-compiles the Win32 pipe code, and runs its tests under Wine when available.

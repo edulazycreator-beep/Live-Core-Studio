@@ -61,3 +61,17 @@ The initial build ran on a **Linux** cloud workspace, not a Windows machine.
 ## 5. Not implemented (by design, Phase 1)
 
 Capture, Preview/Program, switching, multiview, compositing, audio, streaming, recording, NDI, DeckLink, media library, projects/SQLite, hardware diagnostics, installer. None of these appear in the UI.
+
+## 6. Update — Windows CI (2026-11-16)
+
+The repository builds on GitHub Actions (`windows-latest`, MSVC + .NET 10) on every push.
+
+| Check | Result |
+|---|---|
+| MSVC `/W4 /WX` engine build, Debug + Release | ✅ (after fixing one C4459 shadowing warning) |
+| Native tests on Windows (CTest) | ✅ |
+| Full solution incl. WPF, warnings as errors | ✅ (after adding two missing `System.IO` imports) |
+| Managed tests on Windows, real named pipes | ✅ 15/15 |
+| App artifact with `LiveCore.MediaEngine.exe` next to `LiveCoreStudio.exe` | ✅ |
+
+Real Windows exposed one bug that Linux and Wine could not: `DisconnectNamedPipe` drops unread data, so the engine's final reply was lost. Fixed, with a regression test. **Still open:** nobody has looked at the running UI on a screen yet; the Settings `ComboBox` still needs a dark template.

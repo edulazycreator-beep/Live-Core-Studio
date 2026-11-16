@@ -2,6 +2,18 @@
 
 All notable changes to Live Core Studio are documented here. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- GitHub Actions CI: Windows (MSVC + WPF, all tests, app artifact) and Linux jobs.
+
+### Fixed
+- Windows: the engine's last reply (`ShutdownAck`, protocol `Error`) could be lost because `DisconnectNamedPipe` discards unread data; the engine now lingers up to 1 s for the client to read and hang up.
+- MSVC C4459 (clock alias shadowing `::clock_t`); missing `System.IO` imports in WPF view models.
+
+### Changed
+- WPF projects build with warnings as errors (now verified on Windows CI).
+
 ## [0.1.0] — 2026-11-16 — Phase 1 foundation
 
 ### Added

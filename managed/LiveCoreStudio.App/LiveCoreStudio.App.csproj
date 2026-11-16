@@ -7,8 +7,6 @@
     <RootNamespace>LiveCoreStudio.App</RootNamespace>
     <AssemblyName>LiveCoreStudio</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- Not yet compiled on Windows; re-enable after the first clean Windows build. -->
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <!-- Native engine build output copied next to the app. Override with -p:LiveCoreEngineDir=... -->
     <LiveCoreEngineDir Condition="'$(LiveCoreEngineDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\build\windows-msvc-x64\bin\$(Configuration)\</LiveCoreEngineDir>
   </PropertyGroup>

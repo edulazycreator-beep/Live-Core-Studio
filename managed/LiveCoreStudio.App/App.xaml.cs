@@ -18,6 +18,8 @@ namespace LiveCoreStudio.App;
 /// Composition root. Wires services by hand (no DI container) to keep dependencies minimal
 /// and the object graph obvious.
 /// </summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable",
+    Justification = "WPF owns the Application lifetime; the fields are disposed in OnExit.")]
 public partial class App : System.Windows.Application
 {
     private FileAppLog? _log;

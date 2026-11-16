@@ -1,6 +1,6 @@
 # Roadmap
 
-Status key: ✅ done and tested · 🟡 written, awaiting first Windows build · ⬜ not started
+Status key: ✅ done and tested · 🟡 builds on Windows CI, not yet reviewed on screen · ⬜ not started
 
 ## Phase 1 — Foundation
 - ✅ Repository, layered solution, CMake + presets, shared build settings
