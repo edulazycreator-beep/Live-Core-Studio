@@ -256,6 +256,36 @@ void pipeRoundTrip() {
     server->stop();
 }
 
+// The server writes a final reply and closes immediately (as the engine does after
+// ShutdownAck / protocol errors). The client must still receive the reply.
+void pipeFinalReplySurvivesClose() {
+    const std::string name = "LiveCore.Test.Final." + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count() % 1000000);
+    auto server = ipc::PipeServer::create(name);
+    CHECK(server->listen());
+    std::thread srv([&] {
+        auto conn = server->accept();
+        if (!conn) return;
+        const auto reply = protocol::encodeFrame(protocol::MessageType::ShutdownAck, 9, "{}");
+        conn->writeAll(reply.data(), reply.size());
+        conn->close();
+    });
+    {
+        TestClient client;
+        CHECK(client.connect(name));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));  // let the server reach close()
+        std::uint8_t hb[protocol::kHeaderSize];
+        protocol::Header h;
+        CHECK(client.readExact(hb, sizeof hb));
+        CHECK(protocol::decodeHeader(hb, h) == protocol::HeaderError::None);
+        CHECK(h.type == protocol::MessageType::ShutdownAck && h.requestId == 9);
+        std::string body(h.payloadLength, '\0');
+        CHECK(client.readExact(body.data(), body.size()));
+        CHECK(body == "{}");
+    }  // client hangs up here, ending the server's linger
+    srv.join();
+    server->stop();
+}
+
 }  // namespace
 
 int main() {
@@ -270,6 +300,7 @@ int main() {
         {"json: writer round trip", jsonWriterRoundTrip},
         {"ipc: stop() unblocks accept()", pipeServerStopUnblocksAccept},
         {"ipc: round trip over two connections", pipeRoundTrip},
+        {"ipc: final reply survives server close", pipeFinalReplySurvivesClose},
     };
     for (const auto& t : tests) {
         const int before = g_failures;

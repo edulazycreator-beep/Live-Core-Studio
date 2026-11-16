@@ -21,6 +21,7 @@ namespace {
 
 constexpr char kComp[] = "ipc";
 constexpr DWORD kBufferSize = 64 * 1024;
+constexpr DWORD kLingerMs = 1000;
 
 std::wstring widen(const std::string& s) {
     if (s.empty()) return {};
@@ -110,6 +111,19 @@ public:
     void close() override {
         if (!open_) return;
         open_ = false;
+        // DisconnectNamedPipe discards data the client has not read yet, which would
+        // drop a final reply (ShutdownAck, Error). Linger up to 1 s for the client to
+        // read it and hang up; a pending 1-byte read completes when it does.
+        OVERLAPPED ov{};
+        ov.hEvent = io_.get();
+        ResetEvent(io_.get());
+        std::uint8_t byte = 0;
+        DWORD n = 0;
+        if (!ReadFile(pipe_, &byte, 1, &n, &ov) && GetLastError() == ERROR_IO_PENDING) {
+            const HANDLE handles[2] = {io_.get(), stop_};
+            if (WaitForMultipleObjects(2, handles, FALSE, kLingerMs) != WAIT_OBJECT_0) CancelIoEx(pipe_, &ov);
+            GetOverlappedResult(pipe_, &ov, &n, TRUE);
+        }
         DisconnectNamedPipe(pipe_);  // pipe instance is reused for the next client
     }
 
