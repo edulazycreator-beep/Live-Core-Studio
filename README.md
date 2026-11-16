@@ -1,5 +1,7 @@
 # Live Core Studio — Windows Edition
 
+[![Build](https://github.com/edulazycreator-beep/Live-Core-Studio/actions/workflows/build.yml/badge.svg)](https://github.com/edulazycreator-beep/Live-Core-Studio/actions/workflows/build.yml)
+
 An independently developed, all-in-one broadcast production and live-streaming workstation for Windows — built from scratch for weddings, corporate events, conferences and multi-camera studios.
 
 > **Status: Phase 1 foundation (v0.1.0).** The application shell, the native media engine process, the versioned IPC protocol, and engine supervision (health monitoring + automatic restart) are implemented and tested. **No capture, switching, audio, streaming or recording features exist yet** — see [Roadmap](docs/ROADMAP.md).

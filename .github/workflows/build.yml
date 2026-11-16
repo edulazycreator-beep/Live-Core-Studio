@@ -1,0 +1,85 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  windows:
+    name: Windows (MSVC + WPF)
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: MSVC developer environment
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Configure native engine
+        run: cmake --preset windows-msvc-x64
+
+      - name: Build native engine (Debug + Release)
+        run: |
+          cmake --build --preset windows-msvc-x64-debug
+          cmake --build --preset windows-msvc-x64-release
+
+      - name: Native unit tests
+        run: ctest --preset windows-msvc-x64-debug
+
+      - name: Build .NET solution (incl. WPF)
+        run: dotnet build LiveCoreStudio.sln -c Release
+
+      - name: Managed tests (unit + C#/C++ integration over named pipes)
+        shell: pwsh
+        run: |
+          $env:LIVECORE_ENGINE_PATH = "$PWD\out\build\windows-msvc-x64\bin\Release\LiveCore.MediaEngine.exe"
+          dotnet out\managed\bin\LiveCoreStudio.Tests\Release\net10.0\LiveCoreStudio.Tests.dll
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
+      - name: Verify engine shipped next to the app
+        shell: pwsh
+        run: |
+          $app = "out\managed\bin\LiveCoreStudio.App\Release\net10.0-windows"
+          foreach ($f in 'LiveCoreStudio.exe', 'LiveCore.MediaEngine.exe') {
+            if (-not (Test-Path "$app\$f")) { throw "$f missing from $app" }
+          }
+
+      - name: Upload application
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiveCoreStudio-win-x64-${{ github.sha }}
+          path: out/managed/bin/LiveCoreStudio.App/Release/net10.0-windows/
+          if-no-files-found: error
+
+  linux:
+    name: Linux (portable core + MinGW Win32 check)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install MinGW-w64
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq g++-mingw-w64-x86-64-posix
+
+      - name: Build and test
+        run: ./scripts/build-ci-linux.sh
