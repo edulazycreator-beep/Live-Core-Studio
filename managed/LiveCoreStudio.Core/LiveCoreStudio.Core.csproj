@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Domain types shared by every layer. No dependencies, no platform APIs. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>LiveCoreStudio.Core</RootNamespace>
+  </PropertyGroup>
+</Project>

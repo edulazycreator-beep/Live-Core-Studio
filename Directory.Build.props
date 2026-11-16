@@ -1,0 +1,18 @@
+<Project>
+  <!-- Shared settings for every managed project in the repository. -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+    <Version>0.1.0</Version>
+    <Company>Live Core Studio</Company>
+    <Product>Live Core Studio</Product>
+    <Copyright>Copyright © 2026 Live Core Studio</Copyright>
+    <!-- Keep build output out of source folders. -->
+    <BaseOutputPath>$(MSBuildThisFileDirectory)out\managed\bin\$(MSBuildProjectName)\</BaseOutputPath>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)out\managed\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Self-contained test runner (no NuGet dependencies) so tests run on any machine
+    with the .NET SDK, including offline CI. Run: dotnet run -c Release
+    Integration tests need the native engine; set LIVECORE_ENGINE_PATH or build it
+    with a CMake preset first (the runner searches out/build/*/bin).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>LiveCoreStudio.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1031;CA1707;CA1515;CA2007</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\managed\LiveCoreStudio.Infrastructure\LiveCoreStudio.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\managed\LiveCoreStudio.EngineClient\LiveCoreStudio.EngineClient.csproj" />
+  </ItemGroup>
+</Project>

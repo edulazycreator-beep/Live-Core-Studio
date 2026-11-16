@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Use-case contracts the UI depends on. Implementations live in Infrastructure / EngineClient. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>LiveCoreStudio.Application</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiveCoreStudio.Core\LiveCoreStudio.Core.csproj" />
+  </ItemGroup>
+</Project>

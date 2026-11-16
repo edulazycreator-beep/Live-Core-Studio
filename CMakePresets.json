@@ -1,0 +1,57 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "windows-msvc-x64",
+      "displayName": "Windows x64 (MSVC, Ninja)",
+      "description": "Production build. Run from a 'x64 Native Tools' developer prompt.",
+      "generator": "Ninja Multi-Config",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": { "CMAKE_CXX_COMPILER": "cl" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
+      "name": "windows-vs2022-x64",
+      "displayName": "Windows x64 (Visual Studio 2022)",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
+      "name": "linux-dev",
+      "displayName": "Linux dev/CI (engine + IPC only)",
+      "description": "Builds the portable engine core and the Unix-socket transport for CI. Not a shipping target.",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    },
+    {
+      "name": "mingw-cross-x64",
+      "displayName": "Windows x64 cross-compile check (MinGW-w64, from Linux)",
+      "description": "Compiles the Win32 named-pipe code path on Linux CI. Production builds use MSVC.",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_SYSTEM_NAME": "Windows",
+        "CMAKE_CXX_COMPILER": "x86_64-w64-mingw32-g++-posix",
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows-msvc-x64-debug", "configurePreset": "windows-msvc-x64", "configuration": "Debug" },
+    { "name": "windows-msvc-x64-release", "configurePreset": "windows-msvc-x64", "configuration": "Release" },
+    { "name": "windows-vs2022-x64-debug", "configurePreset": "windows-vs2022-x64", "configuration": "Debug" },
+    { "name": "linux-dev", "configurePreset": "linux-dev" },
+    { "name": "mingw-cross-x64", "configurePreset": "mingw-cross-x64" }
+  ],
+  "testPresets": [
+    { "name": "windows-msvc-x64-debug", "configurePreset": "windows-msvc-x64", "configuration": "Debug", "output": { "outputOnFailure": true } },
+    { "name": "linux-dev", "configurePreset": "linux-dev", "output": { "outputOnFailure": true } }
+  ]
+}

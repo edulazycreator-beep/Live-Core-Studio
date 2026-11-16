@@ -1,0 +1,27 @@
+# Build output
+out/
+build/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+.vscode/
+*.VC.db
+*.ipch
+CMakeUserPresets.json
+compile_commands.json
+
+# Packages / tooling
+packages/
+*.nupkg
+TestResults/
+
+# Runtime artifacts
+*.log
+*.dmp
+settings.json.corrupt-*
+
+# OS
+Thumbs.db
+.DS_Store

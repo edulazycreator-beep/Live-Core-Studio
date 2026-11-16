@@ -1,0 +1,104 @@
+<UserControl x:Class="LiveCoreStudio.UI.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:LiveCoreStudio.UI.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:DashboardViewModel}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,0,32,32">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="24" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Media engine -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" VerticalAlignment="Top">
+                <StackPanel>
+                    <DockPanel>
+                        <Border DockPanel.Dock="Right" CornerRadius="10" Padding="10,3" VerticalAlignment="Center"
+                                Background="{StaticResource Brush.SurfaceRaised}">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" VerticalAlignment="Center"
+                                         Fill="{Binding Engine.State, Converter={StaticResource EngineStateToBrush}}" />
+                                <TextBlock Margin="6,0,0,0" FontSize="12" FontWeight="SemiBold" Text="{Binding Engine.StateText}"
+                                           Foreground="{Binding Engine.State, Converter={StaticResource EngineStateToBrush}}" />
+                            </StackPanel>
+                        </Border>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Text.CardTitle}" Text="Media Engine" />
+                            <TextBlock Style="{StaticResource Text.Body}" Margin="0,4,0,0"
+                                       Text="Native C++ process. Supervised: heartbeats every interval, restarted automatically if it stops responding." />
+                        </StackPanel>
+                    </DockPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                        <Button Style="{StaticResource Button.Primary}" Command="{Binding Engine.StartCommand}" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource Glyph}" Width="12" Height="12" Data="{StaticResource Icon.Play}"
+                                      Fill="#FF111214" Stroke="#FF111214" />
+                                <TextBlock Text="Start" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource Button.Base}" Command="{Binding Engine.StopCommand}" Margin="0,0,8,0">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource Glyph}" Width="12" Height="12" Data="{StaticResource Icon.Stop}" />
+                                <TextBlock Text="Stop" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                        <Button Style="{StaticResource Button.Base}" Command="{Binding Engine.RestartCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <Path Style="{StaticResource Glyph}" Width="12" Height="12" Data="{StaticResource Icon.Restart}" />
+                                <TextBlock Text="Restart" Margin="8,0,0,0" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+
+                    <Border Height="1" Background="{StaticResource Brush.Border}" Margin="0,20" />
+
+                    <UniformGrid Columns="3">
+                        <UniformGrid.Resources>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Margin" Value="0,0,16,18" />
+                            </Style>
+                        </UniformGrid.Resources>
+                        <StackPanel><TextBlock Style="{StaticResource Text.Label}" Text="PROCESS ID" /><TextBlock Style="{StaticResource Text.Value}" Text="{Binding Engine.ProcessId}" /></StackPanel>
+                        <StackPanel><TextBlock Style="{StaticResource Text.Label}" Text="ENGINE VERSION" /><TextBlock Style="{StaticResource Text.Value}" Text="{Binding Engine.EngineVersion}" /></StackPanel>
+                        <StackPanel><TextBlock Style="{StaticResource Text.Label}" Text="PROTOCOL" /><TextBlock Style="{StaticResource Text.Value}" Text="{Binding Engine.Protocol}" /></StackPanel>
+                        <StackPanel><TextBlock Style="{StaticResource Text.Label}" Text="UPTIME" /><TextBlock Style="{StaticResource Text.Value}" Text="{Binding Engine.Uptime}" /></StackPanel>
+                        <StackPanel><TextBlock Style="{StaticResource Text.Label}" Text="MASTER CLOCK" /><TextBlock Style="{StaticResource Text.Value}" Text="{Binding Engine.Clock}" /></StackPanel>
+                        <StackPanel><TextBlock Style="{StaticResource Text.Label}" Text="HEARTBEAT ROUND TRIP" /><TextBlock Style="{StaticResource Text.Value}" Text="{Binding Engine.RoundTrip}" /></StackPanel>
+                        <StackPanel><TextBlock Style="{StaticResource Text.Label}" Text="MISSED HEARTBEATS" /><TextBlock Style="{StaticResource Text.Value}" Text="{Binding Engine.MissedHeartbeats}" /></StackPanel>
+                        <StackPanel><TextBlock Style="{StaticResource Text.Label}" Text="AUTOMATIC RESTARTS" /><TextBlock Style="{StaticResource Text.Value}" Text="{Binding Engine.RestartCount}" /></StackPanel>
+                        <StackPanel><TextBlock Style="{StaticResource Text.Label}" Text="PLATFORM" /><TextBlock Style="{StaticResource Text.Value}" Text="{Binding Engine.Platform}" /></StackPanel>
+                    </UniformGrid>
+
+                    <Border CornerRadius="6" Padding="12,10" Background="#1FF0524F" BorderBrush="{StaticResource Brush.Danger}" BorderThickness="1"
+                            Visibility="{Binding Engine.LastError, Converter={StaticResource NullToCollapsed}}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Text.Label}" Text="LAST ERROR" Foreground="{StaticResource Brush.Danger}" />
+                            <TextBlock Style="{StaticResource Text.Body}" Foreground="{StaticResource Brush.TextPrimary}" Text="{Binding Engine.LastError}" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Session -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Style="{StaticResource Text.CardTitle}" Text="Session" Margin="0,0,0,18" />
+                    <TextBlock Style="{StaticResource Text.Label}" Text="APPLICATION" />
+                    <TextBlock Style="{StaticResource Text.Value}" Margin="0,0,0,14"><Run Text="Live Core Studio " /><Run Text="{Binding AppVersion, Mode=OneWay}" /></TextBlock>
+                    <TextBlock Style="{StaticResource Text.Label}" Text="RUNTIME" />
+                    <TextBlock Style="{StaticResource Text.Value}" Margin="0,0,0,14" Text="{Binding RuntimeVersion}" />
+                    <TextBlock Style="{StaticResource Text.Label}" Text="SETTINGS FILE" />
+                    <TextBlock Style="{StaticResource Text.Value}" Margin="0,0,0,14" Text="{Binding SettingsPath}" ToolTip="{Binding SettingsPath}" />
+                    <TextBlock Style="{StaticResource Text.Label}" Text="LOG FOLDER" />
+                    <TextBlock Style="{StaticResource Text.Value}" Text="{Binding LogFolder}" ToolTip="{Binding LogFolder}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

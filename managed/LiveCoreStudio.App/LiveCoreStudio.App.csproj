@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Executable: composition root, startup and shutdown. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>LiveCoreStudio.App</RootNamespace>
+    <AssemblyName>LiveCoreStudio</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Not yet compiled on Windows; re-enable after the first clean Windows build. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <!-- Native engine build output copied next to the app. Override with -p:LiveCoreEngineDir=... -->
+    <LiveCoreEngineDir Condition="'$(LiveCoreEngineDir)' == ''">$(MSBuildThisFileDirectory)..\..\out\build\windows-msvc-x64\bin\$(Configuration)\</LiveCoreEngineDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LiveCoreStudio.UI\LiveCoreStudio.UI.csproj" />
+    <ProjectReference Include="..\LiveCoreStudio.Infrastructure\LiveCoreStudio.Infrastructure.csproj" />
+    <ProjectReference Include="..\LiveCoreStudio.EngineClient\LiveCoreStudio.EngineClient.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('$(LiveCoreEngineDir)LiveCore.MediaEngine.exe')">
+    <None Include="$(LiveCoreEngineDir)LiveCore.MediaEngine.exe" Link="LiveCore.MediaEngine.exe" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(LiveCoreEngineDir)LiveCore.MediaEngine.pdb" Link="LiveCore.MediaEngine.pdb" CopyToOutputDirectory="PreserveNewest"
+          Condition="Exists('$(LiveCoreEngineDir)LiveCore.MediaEngine.pdb')" />
+  </ItemGroup>
+
+  <Target Name="WarnMissingEngine" BeforeTargets="Build" Condition="!Exists('$(LiveCoreEngineDir)LiveCore.MediaEngine.exe')">
+    <Warning Text="LiveCore.MediaEngine.exe not found in '$(LiveCoreEngineDir)'. Build the native engine first (cmake --preset windows-msvc-x64) or set the engine path in Settings." />
+  </Target>
+</Project>

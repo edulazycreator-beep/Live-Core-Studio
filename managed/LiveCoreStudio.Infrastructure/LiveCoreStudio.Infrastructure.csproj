@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Persistence, file system and logging implementations. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>LiveCoreStudio.Infrastructure</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiveCoreStudio.Application\LiveCoreStudio.Application.csproj" />
+  </ItemGroup>
+</Project>

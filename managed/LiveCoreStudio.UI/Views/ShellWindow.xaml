@@ -1,0 +1,107 @@
+<Window x:Class="LiveCoreStudio.UI.Views.ShellWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:LiveCoreStudio.UI.ViewModels"
+        xmlns:conv="clr-namespace:LiveCoreStudio.UI.Converters"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:ShellViewModel}"
+        Title="Live Core Studio"
+        Width="1280" Height="800" MinWidth="960" MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource Brush.Base}"
+        Foreground="{StaticResource Brush.TextPrimary}"
+        FontFamily="{StaticResource Font.UI}"
+        UseLayoutRounding="True" TextOptions.TextFormattingMode="Display">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="80" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="30" />
+        </Grid.RowDefinitions>
+
+        <!-- Navigation rail -->
+        <Border Grid.Column="0" Grid.Row="0" Background="{StaticResource Brush.Surface}"
+                BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,0,1,0">
+            <DockPanel>
+                <!-- Brand mark -->
+                <Border DockPanel.Dock="Top" Width="40" Height="40" Margin="0,18,0,22" CornerRadius="10"
+                        Background="{StaticResource Brush.Accent}" ToolTip="Live Core Studio">
+                    <Grid Width="24" Height="24">
+                        <Path Data="{StaticResource Icon.BrandRing}" Stroke="#FF111214" StrokeThickness="2.4" />
+                        <Path Data="{StaticResource Icon.BrandCore}" Fill="#FF111214" />
+                    </Grid>
+                </Border>
+
+                <ItemsControl ItemsSource="{Binding Pages}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:PageViewModel}">
+                            <RadioButton Style="{StaticResource NavItem}" GroupName="Nav"
+                                         ToolTip="{Binding Title}"
+                                         AutomationProperties.Name="{Binding Title}"
+                                         Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                         CommandParameter="{Binding}"
+                                         Loaded="NavItem_Loaded">
+                                <StackPanel>
+                                    <Path Style="{StaticResource Glyph}" Width="20" Height="20" HorizontalAlignment="Center"
+                                          Data="{Binding IconKey, Converter={x:Static conv:ResourceKeyConverter.Instance}}" />
+                                    <TextBlock Text="{Binding Title}" FontSize="10" Margin="0,5,0,0" HorizontalAlignment="Center"
+                                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" />
+                                </StackPanel>
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </DockPanel>
+        </Border>
+
+        <!-- Page area -->
+        <Grid Grid.Column="1" Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="72" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <DockPanel Margin="32,0" VerticalAlignment="Center">
+                <!-- Engine status pill -->
+                <Border DockPanel.Dock="Right" CornerRadius="14" Padding="12,5" Background="{StaticResource Brush.Surface}"
+                        BorderBrush="{StaticResource Brush.Border}" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" VerticalAlignment="Center"
+                                 Fill="{Binding Engine.State, Converter={StaticResource EngineStateToBrush}}" />
+                        <TextBlock Margin="8,0,0,0" FontSize="12" VerticalAlignment="Center"
+                                   Foreground="{StaticResource Brush.TextSecondary}">
+                            <Run Text="Engine" /><Run Text=" " /><Run Text="{Binding Engine.StateText, Mode=OneWay}" Foreground="{StaticResource Brush.TextPrimary}" />
+                        </TextBlock>
+                    </StackPanel>
+                </Border>
+                <TextBlock Style="{StaticResource Text.PageTitle}" Text="{Binding CurrentPage.Title}" VerticalAlignment="Center" />
+            </DockPanel>
+            <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" Focusable="False" />
+        </Grid>
+
+        <!-- Status bar -->
+        <Border Grid.Row="1" Grid.ColumnSpan="2" Background="{StaticResource Brush.Surface}"
+                BorderBrush="{StaticResource Brush.Border}" BorderThickness="0,1,0,0">
+            <StackPanel Orientation="Horizontal" Margin="16,0" VerticalAlignment="Center">
+                <StackPanel.Resources>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="FontSize" Value="11" />
+                        <Setter Property="FontFamily" Value="{StaticResource Font.Mono}" />
+                        <Setter Property="Foreground" Value="{StaticResource Brush.TextMuted}" />
+                        <Setter Property="Margin" Value="0,0,20,0" />
+                    </Style>
+                </StackPanel.Resources>
+                <TextBlock Text="LIVE CORE STUDIO" Foreground="{StaticResource Brush.Accent}" FontWeight="SemiBold" />
+                <TextBlock><Run Text="ENGINE " /><Run Text="{Binding Engine.StateText, Mode=OneWay}" /></TextBlock>
+                <TextBlock><Run Text="PID " /><Run Text="{Binding Engine.ProcessId, Mode=OneWay}" /></TextBlock>
+                <TextBlock><Run Text="RTT " /><Run Text="{Binding Engine.RoundTrip, Mode=OneWay}" /></TextBlock>
+                <TextBlock><Run Text="UPTIME " /><Run Text="{Binding Engine.Uptime, Mode=OneWay}" /></TextBlock>
+                <TextBlock><Run Text="RESTARTS " /><Run Text="{Binding Engine.RestartCount, Mode=OneWay}" /></TextBlock>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,12 @@
+{
+  "solution": {
+    "path": "LiveCoreStudio.sln",
+    "projects": [
+      "managed/LiveCoreStudio.Core/LiveCoreStudio.Core.csproj",
+      "managed/LiveCoreStudio.Application/LiveCoreStudio.Application.csproj",
+      "managed/LiveCoreStudio.Infrastructure/LiveCoreStudio.Infrastructure.csproj",
+      "managed/LiveCoreStudio.EngineClient/LiveCoreStudio.EngineClient.csproj",
+      "tests/LiveCoreStudio.Tests/LiveCoreStudio.Tests.csproj"
+    ]
+  }
+}

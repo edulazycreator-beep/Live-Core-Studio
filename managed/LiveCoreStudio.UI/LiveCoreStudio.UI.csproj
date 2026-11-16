@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- WPF views, view models, theme and controls. Windows-only. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>LiveCoreStudio.UI</RootNamespace>
+    <!-- Not yet compiled on Windows (authored on a Linux host without NuGet access).
+         Re-enable after the first clean Windows build. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LiveCoreStudio.Application\LiveCoreStudio.Application.csproj" />
+  </ItemGroup>
+</Project>
