@@ -5,6 +5,9 @@
     <!-- Overview: one wide tile over two small tiles. -->
     <Geometry x:Key="Icon.Dashboard">M3,3 H21 V11 H3 Z M3,14 H10.5 V21 H3 Z M13.5,14 H21 V21 H13.5 Z</Geometry>
 
+    <!-- Production: preview and program monitors over a transition bar. -->
+    <Geometry x:Key="Icon.Production">M2,4 H11 V12 H2 Z M13,4 H22 V12 H13 Z M4,17 H20 M12,15 V19</Geometry>
+
     <!-- Engine health: signal trace through a frame. -->
     <Geometry x:Key="Icon.Diagnostics">M2,12 H7 L9.5,5 L14.5,19 L17,12 H22</Geometry>
 

@@ -10,5 +10,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiveCoreStudio.Application\LiveCoreStudio.Application.csproj" />
+    <ProjectReference Include="..\LiveCoreStudio.EngineClient\LiveCoreStudio.EngineClient.csproj" />
   </ItemGroup>
 </Project>

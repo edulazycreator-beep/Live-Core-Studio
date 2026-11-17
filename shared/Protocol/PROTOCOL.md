@@ -41,13 +41,46 @@ A receiver that sees a wrong `magic`, an unsupported `version`, or an oversized 
 | 6 | `Status` | E → C | `{ "state": string, "uptimeMs": int, "pid": int, "clockTicks": int, "clockRateHz": int, "connections": int }` |
 | 7 | `Shutdown` | C → E | `{ "reason": string }` |
 | 8 | `ShutdownAck` | E → C | `{}` — engine exits after sending |
+| 9 | `Ok` | E → C | `{}` — generic success reply |
+| 16 | `ListVideoDevices` | C → E | `{}` |
+| 17 | `VideoDevices` | E → C | `{ "devices": [ { "name": string, "id": string } ] }` — `id` is the Media Foundation symbolic link |
+| 18 | `AddSource` | C → E | `{ "sourceId": int, "kind": "testpattern"\|"device", "name": string, "pattern": "bars"\|"solid", "color": "#RRGGBB", "deviceId": string }` — `sourceId` is chosen by the client (stable across engine restarts); `0` lets the engine pick |
+| 19 | `SourceAdded` | E → C | `{ "sourceId": int }` |
+| 20 | `RemoveSource` | C → E | `{ "sourceId": int }` → `Ok` |
+| 22 | `SetPreview` | C → E | `{ "sourceId": int }` → `Ok` (`0` clears the bus) |
+| 23 | `SetProgram` | C → E | `{ "sourceId": int }` → `Ok` — hot cut, aborts a running transition |
+| 24 | `Cut` | C → E | `{}` → `Ok` — swaps Program and Preview |
+| 25 | `AutoTransition` | C → E | `{ "durationMs": int }` → `Ok` — mix Program → Preview (0–10000 ms); `Error{transition_rejected}` if one is running or Preview is empty |
+| 26 | `GetSwitcherState` | C → E | `{}` |
+| 27 | `SwitcherState` | E → C | `{ "program", "preview", "transitioning", "position", "transitionMs", "outputWidth", "outputHeight", "fps", "adapter", "softwareRendering", "framesRendered", "framesDropped", "programMonitor", "previewMonitor", "monitorWidth", "monitorHeight", "sources": [ { "id", "name", "kind", "status", "width", "height" } ] }` |
 | 255 | `Error` | E → C | `{ "code": string, "message": string }` |
+
+Video messages return `Error{code:"video_unavailable"}` when the engine runs without the video pipeline (non-Windows builds, `--no-video`, or no usable Direct3D device).
 
 ### Rules
 
 1. The first message on a connection must be `Hello`. Anything else gets `Error{code:"handshake_required"}`.
 2. If `Hello.protocolVersion` differs from the engine's, the engine replies `Error{code:"protocol_mismatch"}` and closes.
 3. Unknown message types get `Error{code:"unknown_message"}`; the connection stays open.
+
+## Monitor feeds (shared memory)
+
+The engine publishes downscaled Program and Preview pictures for the operator UI as named file mappings (`SwitcherState.programMonitor` / `previewMonitor`, e.g. `Local\LiveCore.<pipe>.Program`). Full-resolution media never travels this way; it stays on the GPU.
+
+| Offset | Size | Field |
+|---|---|---|
+| 0 | 4 | magic `0x464D434C` (`LCMF`) |
+| 4 | 4 | version `1` |
+| 8 | 4 | width |
+| 12 | 4 | height |
+| 16 | 4 | stride (bytes per row) |
+| 20 | 4 | format (`1` = BGRA8, top-down) |
+| 24 | 8 | sequence — odd while a frame is being written |
+| 32 | 8 | frame number |
+| 40 | 8 | timestamp (µs, engine steady clock) |
+| 64 | stride × height | pixels |
+
+Readers copy the pixels and accept the copy only if `sequence` was even and unchanged before and after (sequence lock).
 
 ## Health monitoring (client side)
 

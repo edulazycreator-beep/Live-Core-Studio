@@ -25,6 +25,7 @@ public partial class App : System.Windows.Application
     private FileAppLog? _log;
     private JsonSettingsStore? _settingsStore;
     private EngineSupervisor? _engine;
+    private EngineProductionService? _production;
     private AppSettings _settings = new();
     private bool _shutdownComplete;
 
@@ -45,9 +46,11 @@ public partial class App : System.Windows.Application
 
         var dispatcher = new WpfUiDispatcher(Dispatcher);
         var engineStatus = new EngineStatusViewModel(_engine, dispatcher, _log);
+        _production = new EngineProductionService(_engine, _log);
         var pages = new PageViewModel[]
         {
             new DashboardViewModel(engineStatus, _settingsStore, paths.Logs),
+            new ProductionViewModel(_production, _log),
             new DiagnosticsViewModel(_log, dispatcher, paths.Logs, _log.Recent),
             new SettingsViewModel(_settingsStore, _settings, _log, saved => _settings = saved),
         };

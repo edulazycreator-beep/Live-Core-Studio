@@ -12,4 +12,6 @@
     <conv:EngineStateToBrushConverter x:Key="EngineStateToBrush" />
     <conv:NullToCollapsedConverter x:Key="NullToCollapsed" />
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
+    <conv:ZeroToVisibleConverter x:Key="ZeroToVisible" />
 </ResourceDictionary>
