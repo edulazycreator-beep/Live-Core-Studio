@@ -76,6 +76,16 @@ jobs:
             if (-not (Test-Path "$out\$f.png")) { throw "$f.png missing" }
           }
 
+      - name: Print UI screenshots (base64, for log-only review)
+        if: always()
+        shell: pwsh
+        run: |
+          foreach ($f in Get-ChildItem out\smoke\*.png -ErrorAction SilentlyContinue) {
+            "=====BEGIN $($f.Name)====="
+            [Convert]::ToBase64String([IO.File]::ReadAllBytes($f.FullName)) -split '(.{4000})' | Where-Object { $_ }
+            "=====END $($f.Name)====="
+          }
+
       - name: Upload UI screenshots
         if: always()
         uses: actions/upload-artifact@v4
