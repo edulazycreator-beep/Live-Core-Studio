@@ -9,6 +9,12 @@ public sealed record PongResponse(long Seq, long ClientTimeMs, long EngineUptime
 public sealed record EngineStatus(string State, long UptimeMs, int Pid, long ClockTicks, int ClockRateHz, int Connections);
 public sealed record ShutdownRequest(string Reason);
 public sealed record ErrorResponse(string Code, string Message);
+public sealed record OkResponse;
+public sealed record AddSourceRequest(uint SourceId, string Kind, string Name, string Pattern, string Color, string? DeviceId);
+public sealed record SourceAddedResponse(uint SourceId);
+public sealed record SourceRequest(uint SourceId);
+public sealed record AutoTransitionRequest(int DurationMs);
+public sealed record VideoDevicesResponse(IReadOnlyList<LiveCoreStudio.Core.Production.VideoDeviceInfo> Devices);
 
 internal static class ProtocolJson
 {

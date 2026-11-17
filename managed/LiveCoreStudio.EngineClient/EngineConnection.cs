@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using System.IO.Pipes;
 using System.Text.Json;
+using LiveCoreStudio.Core.Production;
 using LiveCoreStudio.EngineClient.Protocol;
 
 namespace LiveCoreStudio.EngineClient;
@@ -71,6 +72,35 @@ public sealed class EngineConnection : IAsyncDisposable
 
     public Task<EngineStatus> GetStatusAsync(TimeSpan timeout, CancellationToken ct) =>
         RequestAsync<object, EngineStatus>(MessageType.GetStatus, null, MessageType.Status, timeout, ct);
+
+    // ---- Video / production (protocol messages 16-27) ----
+
+    public async Task<IReadOnlyList<VideoDeviceInfo>> ListVideoDevicesAsync(TimeSpan timeout, CancellationToken ct) =>
+        (await RequestAsync<object, VideoDevicesResponse>(MessageType.ListVideoDevices, null, MessageType.VideoDevices, timeout, ct)
+            .ConfigureAwait(false)).Devices;
+
+    public async Task<uint> AddSourceAsync(SourceSpec spec, TimeSpan timeout, CancellationToken ct) =>
+        (await RequestAsync<AddSourceRequest, SourceAddedResponse>(MessageType.AddSource,
+            new AddSourceRequest(spec.Id, spec.Kind, spec.Name, spec.Pattern, spec.Color, spec.DeviceId),
+            MessageType.SourceAdded, timeout, ct).ConfigureAwait(false)).SourceId;
+
+    public Task RemoveSourceAsync(uint id, TimeSpan timeout, CancellationToken ct) =>
+        RequestAsync<SourceRequest, OkResponse>(MessageType.RemoveSource, new SourceRequest(id), MessageType.Ok, timeout, ct);
+
+    public Task SetPreviewAsync(uint id, TimeSpan timeout, CancellationToken ct) =>
+        RequestAsync<SourceRequest, OkResponse>(MessageType.SetPreview, new SourceRequest(id), MessageType.Ok, timeout, ct);
+
+    public Task SetProgramAsync(uint id, TimeSpan timeout, CancellationToken ct) =>
+        RequestAsync<SourceRequest, OkResponse>(MessageType.SetProgram, new SourceRequest(id), MessageType.Ok, timeout, ct);
+
+    public Task CutAsync(TimeSpan timeout, CancellationToken ct) =>
+        RequestAsync<object, OkResponse>(MessageType.Cut, null, MessageType.Ok, timeout, ct);
+
+    public Task AutoTransitionAsync(int durationMs, TimeSpan timeout, CancellationToken ct) =>
+        RequestAsync<AutoTransitionRequest, OkResponse>(MessageType.AutoTransition, new AutoTransitionRequest(durationMs), MessageType.Ok, timeout, ct);
+
+    public Task<SwitcherState> GetSwitcherStateAsync(TimeSpan timeout, CancellationToken ct) =>
+        RequestAsync<object, SwitcherState>(MessageType.GetSwitcherState, null, MessageType.SwitcherState, timeout, ct);
 
     public async Task ShutdownAsync(string reason, TimeSpan timeout, CancellationToken ct) =>
         await SendRawAsync(MessageType.Shutdown, JsonSerializer.SerializeToUtf8Bytes(new ShutdownRequest(reason), ProtocolJson.Options),

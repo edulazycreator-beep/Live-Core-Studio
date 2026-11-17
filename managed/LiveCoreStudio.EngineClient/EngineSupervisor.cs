@@ -26,6 +26,7 @@ public sealed class EngineSupervisor : IEngineController
     private CancellationTokenSource? _loopCts;
     private Task? _loop;
     private EngineHealthSnapshot _health = EngineHealthSnapshot.Initial;
+    private EngineConnection? _connection;
     private int _restartCount;
 
     public EngineSupervisor(Func<EngineSettings> settings, IAppLog log)
@@ -37,6 +38,12 @@ public sealed class EngineSupervisor : IEngineController
     public EngineHealthSnapshot Health => Volatile.Read(ref _health);
 
     public event Action<EngineHealthSnapshot>? HealthChanged;
+
+    /// <summary>The live control connection while the engine is Running; otherwise null.</summary>
+    public EngineConnection? Connection => Volatile.Read(ref _connection);
+
+    /// <summary>Raised (on a background thread) after every successful launch + handshake, including restarts.</summary>
+    public event Action<EngineConnection>? Connected;
 
     /// <summary>Process id of the current engine, for tests and diagnostics.</summary>
     public int? CurrentProcessId => Health.ProcessId;
@@ -115,6 +122,7 @@ public sealed class EngineSupervisor : IEngineController
                     firstStart.TrySetResult();
                     var runStarted = Stopwatch.StartNew();
                     fault = await MonitorAsync(session, settings, ct).ConfigureAwait(false);
+                    Volatile.Write(ref _connection, null);
                     if (fault is null)
                     {
                         await ShutdownGracefullyAsync(session).ConfigureAwait(false);
@@ -124,12 +132,14 @@ public sealed class EngineSupervisor : IEngineController
                 }
                 catch (OperationCanceledException) when (ct.IsCancellationRequested)
                 {
+                    Volatile.Write(ref _connection, null);
                     if (session is not null) await ShutdownGracefullyAsync(session).ConfigureAwait(false);
                     firstStart.TrySetCanceled(ct);
                     return;
                 }
                 catch (Exception ex)
                 {
+                    Volatile.Write(ref _connection, null);
                     fault = $"Engine failed to start: {ex.Message}";
                     if (session is not null) await session.DisposeAsync().ConfigureAwait(false);
                     session = null;
@@ -209,6 +219,15 @@ public sealed class EngineSupervisor : IEngineController
                 MissedHeartbeats = 0,
                 RestartCount = _restartCount,
             });
+            Volatile.Write(ref _connection, connection);
+            try
+            {
+                Connected?.Invoke(connection);
+            }
+            catch (Exception ex)
+            {
+                _log.Error(Source, $"Connected handler threw: {ex.Message}");
+            }
             return new Session(process, connection, hello);
         }
         catch

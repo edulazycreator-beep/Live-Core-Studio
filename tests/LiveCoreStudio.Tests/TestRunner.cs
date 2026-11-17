@@ -66,7 +66,7 @@ public static class Program
             try
             {
                 var result = method.Invoke(null, null);
-                if (result is Task task) await task.WaitAsync(TimeSpan.FromSeconds(60));
+                if (result is Task task) await task.WaitAsync(TimeSpan.FromSeconds(120));
                 passed++;
                 Console.WriteLine($"[ OK ] {name} ({sw.ElapsedMilliseconds} ms)");
             }

@@ -14,6 +14,8 @@ public static class EngineIntegrationTests
 {
     private static readonly TimeSpan Timeout5 = TimeSpan.FromSeconds(5);
 
+    internal static string EnginePathForTests() => EnginePath();
+
     private static string EnginePath()
     {
         var env = Environment.GetEnvironmentVariable("LIVECORE_ENGINE_PATH");
