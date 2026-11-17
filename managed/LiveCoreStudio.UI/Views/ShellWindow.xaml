@@ -45,7 +45,7 @@
                                          AutomationProperties.Name="{Binding Title}"
                                          Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                          CommandParameter="{Binding}"
-                                         Loaded="NavItem_Loaded">
+                                         IsChecked="{Binding IsSelected, Mode=OneWay}">
                                 <StackPanel>
                                     <Path Style="{StaticResource Glyph}" Width="20" Height="20" HorizontalAlignment="Center"
                                           Data="{Binding IconKey, Converter={x:Static conv:ResourceKeyConverter.Instance}}" />

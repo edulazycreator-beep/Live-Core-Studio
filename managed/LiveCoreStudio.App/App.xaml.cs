@@ -1,3 +1,4 @@
+using System.IO;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Threading;
@@ -28,10 +29,13 @@ public partial class App : System.Windows.Application
     private EngineProductionService? _production;
     private AppSettings _settings = new();
     private bool _shutdownComplete;
+    private string? _smokeFolder;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        var smokeIndex = Array.IndexOf(e.Args, "--smoke-test");
+        if (smokeIndex >= 0) _smokeFolder = smokeIndex + 1 < e.Args.Length ? e.Args[smokeIndex + 1] : "smoke-test";
 
         var paths = new AppPaths();
         paths.EnsureCreated();
@@ -61,8 +65,19 @@ public partial class App : System.Windows.Application
         MainWindow = window;
         window.Show();
 
-        if (_settings.Engine.StartWithApplication)
+        if (_settings.Engine.StartWithApplication || _smokeFolder is not null)
             _ = StartEngineAsync();
+
+        if (_smokeFolder is not null)
+            _ = RunSmokeTestAsync(new SmokeTest(window, shell, _engine, _production, _log, Path.GetFullPath(_smokeFolder)));
+    }
+
+    private async Task RunSmokeTestAsync(SmokeTest test)
+    {
+        var code = await test.RunAsync();
+        try { await _engine!.StopAsync(); } catch (Exception ex) { _log!.Error("smoke", ex.Message); }
+        _shutdownComplete = true;
+        Shutdown(code);
     }
 
     private async Task StartEngineAsync()
@@ -144,6 +159,14 @@ public partial class App : System.Windows.Application
         DispatcherUnhandledException += (_, args) =>
         {
             log.Error("app", $"Unhandled UI exception: {args.Exception}");
+            if (_smokeFolder is not null)
+            {
+                File.WriteAllText(Path.Combine(Path.GetFullPath(_smokeFolder), "FAILED.txt"), args.Exception.ToString());
+                args.Handled = true;
+                _shutdownComplete = true;
+                Shutdown(2);
+                return;
+            }
             MessageBox.Show(args.Exception.Message, "Live Core Studio — unexpected error", MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;  // keep a live production running; the error is logged
         };

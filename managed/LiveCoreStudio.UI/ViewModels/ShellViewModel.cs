@@ -14,6 +14,7 @@ public sealed partial class ShellViewModel : ObservableObject
         Engine = engine;
         _rememberPage = rememberPage;
         _currentPage = pages.FirstOrDefault(p => p.Key == startPage) ?? pages[0];
+        _currentPage.IsSelected = true;
         _currentPage.OnNavigatedTo();
     }
 
@@ -24,6 +25,7 @@ public sealed partial class ShellViewModel : ObservableObject
 
     partial void OnCurrentPageChanged(PageViewModel value)
     {
+        foreach (var page in Pages) page.IsSelected = ReferenceEquals(page, value);
         value.OnNavigatedTo();
         _rememberPage(value.Key);
     }

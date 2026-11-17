@@ -1,8 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Interop;
-using LiveCoreStudio.UI.ViewModels;
 
 namespace LiveCoreStudio.UI.Views;
 
@@ -12,13 +10,6 @@ public partial class ShellWindow : Window
     {
         InitializeComponent();
         SourceInitialized += (_, _) => ApplyDarkTitleBar();
-    }
-
-    // Marks the rail item of the page the shell opened on.
-    private void NavItem_Loaded(object sender, RoutedEventArgs e)
-    {
-        if (sender is RadioButton rb && DataContext is ShellViewModel shell)
-            rb.IsChecked = ReferenceEquals(rb.DataContext, shell.CurrentPage);
     }
 
     // Windows 10 20H1+ / Windows 11: dark caption to match the charcoal UI.

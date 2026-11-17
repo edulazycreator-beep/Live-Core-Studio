@@ -11,6 +11,15 @@ public abstract class PageViewModel(string key, string title, string iconKey) : 
     /// <summary>Resource key of the navigation glyph.</summary>
     public string IconKey { get; } = iconKey;
 
+    private bool _isSelected;
+
+    /// <summary>True while this page is shown; drives the navigation rail highlight.</summary>
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
+
     /// <summary>Called when the page becomes visible.</summary>
     public virtual void OnNavigatedTo() { }
 }

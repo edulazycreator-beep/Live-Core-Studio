@@ -60,6 +60,30 @@ jobs:
             if (-not (Test-Path "$app\$f")) { throw "$f missing from $app" }
           }
 
+      - name: UI smoke test (runs the real app, screenshots every page)
+        shell: pwsh
+        env:
+          LIVECORE_FORCE_WARP: "1"
+        run: |
+          $app = "out\managed\bin\LiveCoreStudio.App\Release\net10.0-windows\LiveCoreStudio.exe"
+          $out = "$PWD\out\smoke"
+          $p = Start-Process $app -ArgumentList "--smoke-test", "`"$out`"" -PassThru
+          if (-not $p.WaitForExit(120000)) { $p.Kill(); throw "smoke test timed out" }
+          Get-ChildItem $out | Format-Table Name, Length
+          if (Test-Path "$out\FAILED.txt") { Get-Content "$out\FAILED.txt"; throw "smoke test failed" }
+          if ($p.ExitCode -ne 0) { throw "smoke test exit code $($p.ExitCode)" }
+          foreach ($f in 'dashboard','production','production-mid-transition','diagnostics','settings') {
+            if (-not (Test-Path "$out\$f.png")) { throw "$f.png missing" }
+          }
+
+      - name: Upload UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-screenshots
+          path: out/smoke/
+          if-no-files-found: ignore
+
       - name: Upload application
         uses: actions/upload-artifact@v4
         with:
