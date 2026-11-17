@@ -179,6 +179,8 @@
                                 <Button DockPanel.Dock="Right" Style="{StaticResource Button.Base}" Content="Refresh" Margin="8,0,0,0" Command="{Binding RefreshDevicesCommand}" />
                                 <ComboBox ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice}" DisplayMemberPath="Name" />
                             </DockPanel>
+                            <TextBlock Text="{Binding DeviceHint}" Style="{StaticResource Text.Body}" FontSize="12" Margin="0,8,0,0"
+                                       Foreground="{StaticResource Brush.TextMuted}" Visibility="{Binding DeviceHint, Converter={StaticResource NullToCollapsed}}" />
                             <Button Style="{StaticResource Button.Primary}" Content="Add camera" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding AddDeviceCommand}" />
                         </StackPanel>
                     </Border>

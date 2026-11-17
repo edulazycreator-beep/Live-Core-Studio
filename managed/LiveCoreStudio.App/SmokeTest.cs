@@ -38,6 +38,8 @@ internal sealed class SmokeTest(Window window, ShellViewModel shell, EngineSuper
             await production.SetPreviewAsync(orange.Id);
             await ShowAsync("production", 2500);
 
+            if (FindScrollViewer(window) is { } scroller) { scroller.ScrollToBottom(); await Task.Delay(400); await CaptureAsync("production-sources"); scroller.ScrollToTop(); }
+
             await production.AutoTransitionAsync(2000);
             await Task.Delay(900);
             await CaptureAsync("production-mid-transition");
@@ -51,6 +53,17 @@ internal sealed class SmokeTest(Window window, ShellViewModel shell, EngineSuper
         {
             return Fail(ex.ToString());
         }
+    }
+
+    private static System.Windows.Controls.ScrollViewer? FindScrollViewer(DependencyObject root)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is System.Windows.Controls.ScrollViewer { Content: System.Windows.Controls.StackPanel } sv) return sv;
+            if (FindScrollViewer(child) is { } found) return found;
+        }
+        return null;
     }
 
     private int Fail(string reason)
@@ -70,9 +83,9 @@ internal sealed class SmokeTest(Window window, ShellViewModel shell, EngineSuper
     private Task CaptureAsync(string name)
     {
         window.UpdateLayout();
-        var width = (int)Math.Ceiling(window.ActualWidth);
-        var height = (int)Math.Ceiling(window.ActualHeight);
         var content = (FrameworkElement)window.Content;
+        var width = (int)Math.Ceiling(content.ActualWidth);
+        var height = (int)Math.Ceiling(content.ActualHeight);
 
         // Paint the window background, then the content, so the PNG matches what the operator sees.
         var visual = new DrawingVisual();

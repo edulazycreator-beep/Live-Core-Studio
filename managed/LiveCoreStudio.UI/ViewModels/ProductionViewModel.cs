@@ -112,6 +112,7 @@ public sealed partial class ProductionViewModel : PageViewModel, IDisposable
     [ObservableProperty] private string _newPatternKind = "bars";
     [ObservableProperty] private string _newPatternColor = "#FF7A1A";
     [ObservableProperty] private VideoDeviceInfo? _selectedDevice;
+    [ObservableProperty] private string? _deviceHint;
 
     public override void OnNavigatedTo() => _ = RefreshDevicesAsync();
 
@@ -226,7 +227,7 @@ public sealed partial class ProductionViewModel : PageViewModel, IDisposable
         Devices.Clear();
         foreach (var d in devices) Devices.Add(d);
         SelectedDevice ??= Devices.FirstOrDefault();
-        if (Devices.Count == 0) Message = "No capture devices found. Connect a USB/HDMI capture device and refresh.";
+        DeviceHint = Devices.Count == 0 ? "No capture devices found. Connect a USB/HDMI capture device, then Refresh." : null;
     });
 
     public void Dispose()
