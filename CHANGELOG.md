@@ -5,6 +5,12 @@ All notable changes to Live Core Studio are documented here. Format: [Keep a Cha
 ## [Unreleased]
 
 ### Added
+- **Phase 4 — video core.** Direct3D 11 rendering with WARP fallback; GPU test-pattern sources; Media Foundation USB/HDMI capture sources and device listing; Program/Preview switcher with CUT, AUTO (mix) and hot cut; Program/Preview monitor feeds over shared memory; protocol messages 9 and 16–27.
+- Production page: live Program/Preview monitors with tally, bus rows, CUT (Space) / AUTO (Enter), transition duration, add/remove sources.
+- Automatic restore of sources and bus selection after an engine restart.
+- Tests: switcher unit tests; Windows integration tests that read real rendered pixels; restore-after-crash test.
+- CI: UI smoke test runs the real app and screenshots every page.
+- Dark scrollbar and ComboBox templates.
 - GitHub Actions CI: Windows (MSVC + WPF, all tests, app artifact) and Linux jobs.
 
 ### Fixed
