@@ -3,6 +3,7 @@
 #include "livecore/core/FlatJson.h"
 #include "livecore/core/PipeServer.h"
 #include "livecore/core/Protocol.h"
+#include "livecore/video/Switcher.h"
 
 #include <cstdio>
 #include <chrono>
@@ -286,6 +287,52 @@ void pipeFinalReplySurvivesClose() {
     server->stop();
 }
 
+void switcherBasics() {
+    video::Switcher sw;
+    const auto t = video::Switcher::Clock::now();
+    CHECK(sw.snapshot(t).program == video::kNoSource);
+    CHECK(!sw.setPreview(7));  // unknown source
+    sw.addInput(1);
+    sw.addInput(2);
+    CHECK(sw.setProgram(1));
+    CHECK(sw.setPreview(2));
+    auto f = sw.advance(t);
+    CHECK(f.from == 1 && f.to == 1 && f.mix == 0.0f);
+    sw.cut();
+    CHECK(sw.snapshot(t).program == 2 && sw.snapshot(t).preview == 1);
+    sw.removeInput(2);  // removing the on-air source clears program
+    CHECK(sw.snapshot(t).program == video::kNoSource && sw.snapshot(t).preview == 1);
+    CHECK(sw.setPreview(video::kNoSource));
+}
+
+void switcherAutoTransition() {
+    using namespace std::chrono_literals;
+    video::Switcher sw;
+    sw.addInput(1);
+    sw.addInput(2);
+    sw.setProgram(1);
+    const auto t0 = video::Switcher::Clock::now();
+    CHECK(!sw.autoTransition(1000ms, t0));  // preview empty
+    sw.setPreview(2);
+    CHECK(sw.autoTransition(1000ms, t0));
+    CHECK(!sw.autoTransition(1000ms, t0));  // already running
+    auto mid = sw.advance(t0 + 500ms);
+    CHECK(mid.from == 1 && mid.to == 2);
+    CHECK(mid.mix > 0.45f && mid.mix < 0.55f);
+    CHECK(sw.snapshot(t0 + 500ms).transitioning);
+    auto done = sw.advance(t0 + 1001ms);
+    CHECK(done.from == 2 && done.to == 2 && done.mix == 0.0f);
+    const auto s = sw.snapshot(t0 + 1001ms);
+    CHECK(s.program == 2 && s.preview == 1 && !s.transitioning);
+
+    // Zero duration swaps immediately; hot cut aborts a running mix.
+    CHECK(sw.autoTransition(0ms, t0));
+    CHECK(sw.snapshot(t0).program == 1);
+    CHECK(sw.autoTransition(1000ms, t0));
+    CHECK(sw.setProgram(2));
+    CHECK(!sw.snapshot(t0 + 100ms).transitioning && sw.snapshot(t0).program == 2);
+}
+
 }  // namespace
 
 int main() {
@@ -301,6 +348,8 @@ int main() {
         {"ipc: stop() unblocks accept()", pipeServerStopUnblocksAccept},
         {"ipc: round trip over two connections", pipeRoundTrip},
         {"ipc: final reply survives server close", pipeFinalReplySurvivesClose},
+        {"switcher: buses, cut, removal", switcherBasics},
+        {"switcher: auto transition", switcherAutoTransition},
     };
     for (const auto& t : tests) {
         const int before = g_failures;

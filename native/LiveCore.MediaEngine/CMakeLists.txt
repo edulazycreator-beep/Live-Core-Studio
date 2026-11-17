@@ -4,6 +4,9 @@ add_executable(LiveCore.MediaEngine
     src/Platform.cpp)
 
 target_link_libraries(LiveCore.MediaEngine PRIVATE LiveCore.MediaCore livecore_warnings)
+if(LIVECORE_ENABLE_VIDEO)
+    target_link_libraries(LiveCore.MediaEngine PRIVATE LiveCore.Video)
+endif()
 target_compile_definitions(LiveCore.MediaEngine PRIVATE LIVECORE_ENGINE_VERSION="${PROJECT_VERSION}")
 
 if(MINGW)

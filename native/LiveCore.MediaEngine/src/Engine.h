@@ -2,6 +2,7 @@
 // Engine host: owns the control endpoint, the master clock and lifecycle state.
 #pragma once
 
+#include "livecore/core/FlatJson.h"
 #include "livecore/core/PipeServer.h"
 #include "livecore/core/Protocol.h"
 
@@ -13,6 +14,12 @@
 #include <string>
 #include <string_view>
 
+#if defined(LIVECORE_HAS_VIDEO)
+namespace livecore::video {
+class VideoPipeline;
+}
+#endif
+
 namespace livecore::engine {
 
 enum class EngineState { Starting, Running, Stopping };
@@ -22,6 +29,10 @@ struct EngineOptions {
     std::string pipeName;
     std::optional<std::int64_t> parentPid;
     int clockRateHz = 60;
+    bool videoEnabled = true;
+    std::uint32_t videoWidth = 1280;
+    std::uint32_t videoHeight = 720;
+    int videoFps = 30;
 };
 
 class Engine {
@@ -47,6 +58,8 @@ private:
     bool send(ipc::PipeConnection& conn, protocol::MessageType type, std::uint32_t requestId, const std::string& payload);
     bool sendError(ipc::PipeConnection& conn, std::uint32_t requestId, std::string_view code, std::string_view message);
     std::string statusPayload() const;
+    /// Handles Phase 4 video/production commands. Returns false if the connection broke.
+    bool handleVideo(ipc::PipeConnection& conn, const protocol::Header& h, const json::Object& body);
 
     EngineOptions options_;
     std::unique_ptr<ipc::PipeServer> server_;
@@ -55,6 +68,10 @@ private:
     std::atomic<std::uint64_t> clockTicks_{0};
     std::atomic<int> connections_{0};
     std::chrono::steady_clock::time_point started_;
+#if defined(LIVECORE_HAS_VIDEO)
+    std::unique_ptr<video::VideoPipeline> video_;
+#endif
+    std::string videoError_ = "video pipeline not built into this engine";
 };
 
 }  // namespace livecore::engine

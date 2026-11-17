@@ -12,6 +12,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(LIVECORE_BUILD_TESTS "Build native unit tests" ON)
 option(LIVECORE_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
+# The video pipeline needs Direct3D 11 + Media Foundation (MSVC on Windows).
+if(MSVC)
+    set(LIVECORE_VIDEO_DEFAULT ON)
+else()
+    set(LIVECORE_VIDEO_DEFAULT OFF)
+endif()
+option(LIVECORE_ENABLE_VIDEO "Build the Direct3D 11 video pipeline" ${LIVECORE_VIDEO_DEFAULT})
 
 # All binaries land in one folder so the app can find the engine next to it.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -36,6 +43,10 @@ else()
 endif()
 
 add_subdirectory(native/LiveCore.MediaCore)
+if(LIVECORE_ENABLE_VIDEO)
+    add_subdirectory(native/LiveCore.Rendering)
+endif()
+add_subdirectory(native/LiveCore.Video)
 add_subdirectory(native/LiveCore.MediaEngine)
 
 if(LIVECORE_BUILD_TESTS)

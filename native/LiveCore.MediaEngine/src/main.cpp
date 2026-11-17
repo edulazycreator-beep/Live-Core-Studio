@@ -24,6 +24,7 @@ void usage() {
     std::fputs(
         "LiveCore.MediaEngine " LIVECORE_ENGINE_VERSION "\n"
         "Usage: LiveCore.MediaEngine --pipe <name> [--parent-pid <pid>] [--clock-rate <hz>]\n"
+        "                            [--no-video] [--video-size WxH] [--fps <n>]\n"
         "                            [--log-level trace|debug|info|warn|error|off] [--log-file <path>]\n",
         stderr);
 }
@@ -71,6 +72,23 @@ int main(int argc, char** argv) {
             int hz = 0;
             if (!parseInt(next(), hz) || hz < 1 || hz > 1000) { std::fputs("invalid --clock-rate (1..1000)\n", stderr); return 1; }
             opts.clockRateHz = hz;
+        } else if (a == "--no-video") {
+            opts.videoEnabled = false;
+        } else if (a == "--video-size") {
+            const std::string_view v = next();
+            const auto x = v.find('x');
+            std::uint32_t w = 0, h = 0;
+            if (x == std::string_view::npos || !parseInt(v.substr(0, x), w) || !parseInt(v.substr(x + 1), h) || w < 64 ||
+                h < 64 || w > 7680 || h > 4320) {
+                std::fputs("invalid --video-size (e.g. 1920x1080)\n", stderr);
+                return 1;
+            }
+            opts.videoWidth = w;
+            opts.videoHeight = h;
+        } else if (a == "--fps") {
+            int fps = 0;
+            if (!parseInt(next(), fps) || fps < 1 || fps > 120) { std::fputs("invalid --fps (1..120)\n", stderr); return 1; }
+            opts.videoFps = fps;
         } else if (a == "--log-level") {
             log::Level lvl;
             if (!log::parseLevel(next(), lvl)) { std::fputs("invalid --log-level\n", stderr); return 1; }

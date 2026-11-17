@@ -9,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace livecore::json {
 
@@ -43,6 +44,9 @@ public:
     Writer& add(std::string_view key, std::int64_t value);
     Writer& add(std::string_view key, int value) { return add(key, static_cast<std::int64_t>(value)); }
     Writer& add(std::string_view key, bool value);
+    Writer& add(std::string_view key, double value);
+    /// Inserts already-serialized JSON (an array or object) verbatim.
+    Writer& addRaw(std::string_view key, std::string_view json);
     std::string str() const { return body_.empty() ? std::string("{}") : "{" + body_ + "}"; }
 
 private:
@@ -51,5 +55,8 @@ private:
 };
 
 std::string escape(std::string_view s);
+
+/// Joins already-serialized JSON values into an array: [a,b,c].
+std::string array(const std::vector<std::string>& items);
 
 }  // namespace livecore::json

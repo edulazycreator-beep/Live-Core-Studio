@@ -30,6 +30,18 @@ std::string_view toString(MessageType t) {
         case MessageType::Status: return "Status";
         case MessageType::Shutdown: return "Shutdown";
         case MessageType::ShutdownAck: return "ShutdownAck";
+        case MessageType::Ok: return "Ok";
+        case MessageType::ListVideoDevices: return "ListVideoDevices";
+        case MessageType::VideoDevices: return "VideoDevices";
+        case MessageType::AddSource: return "AddSource";
+        case MessageType::SourceAdded: return "SourceAdded";
+        case MessageType::RemoveSource: return "RemoveSource";
+        case MessageType::SetPreview: return "SetPreview";
+        case MessageType::SetProgram: return "SetProgram";
+        case MessageType::Cut: return "Cut";
+        case MessageType::AutoTransition: return "AutoTransition";
+        case MessageType::GetSwitcherState: return "GetSwitcherState";
+        case MessageType::SwitcherState: return "SwitcherState";
         case MessageType::Error: return "Error";
     }
     return "Unknown";

@@ -4,6 +4,10 @@
 #include "livecore/core/FlatJson.h"
 #include "livecore/core/Log.h"
 
+#if defined(LIVECORE_HAS_VIDEO)
+#include "livecore/video/VideoPipeline.h"
+#endif
+
 #include <algorithm>
 #include <format>
 #include <thread>
@@ -17,6 +21,27 @@ namespace livecore::engine {
 namespace {
 constexpr char kComp[] = "engine";
 }
+
+namespace {
+// "#RRGGBB" → 0..1 floats. Defaults to black on malformed input.
+[[maybe_unused]]
+void parseColor(const std::string& text, float& r, float& g, float& b) {
+    r = g = b = 0.0f;
+    if (text.size() != 7 || text[0] != '#') return;
+    unsigned v = 0;
+    for (std::size_t i = 1; i < 7; ++i) {
+        const char c = text[i];
+        v <<= 4;
+        if (c >= '0' && c <= '9') v |= static_cast<unsigned>(c - '0');
+        else if (c >= 'a' && c <= 'f') v |= static_cast<unsigned>(c - 'a' + 10);
+        else if (c >= 'A' && c <= 'F') v |= static_cast<unsigned>(c - 'A' + 10);
+        else return;
+    }
+    r = static_cast<float>((v >> 16) & 0xFF) / 255.0f;
+    g = static_cast<float>((v >> 8) & 0xFF) / 255.0f;
+    b = static_cast<float>(v & 0xFF) / 255.0f;
+}
+}  // namespace
 
 std::string_view toString(EngineState s) {
     switch (s) {
@@ -74,6 +99,26 @@ int Engine::run() {
         });
     }
 
+#if defined(LIVECORE_HAS_VIDEO)
+    if (options_.videoEnabled) {
+        video::VideoConfig vc;
+        vc.width = options_.videoWidth;
+        vc.height = options_.videoHeight;
+        vc.fps = options_.videoFps;
+        vc.monitorPrefix = "Local\\LiveCore." + options_.pipeName;
+        auto pipeline = std::make_unique<video::VideoPipeline>(vc);
+        std::string err;
+        if (pipeline->start(err)) {
+            video_ = std::move(pipeline);
+        } else {
+            videoError_ = "video pipeline failed to start: " + err;
+            log::error(kComp, "{}", videoError_);
+        }
+    } else {
+        videoError_ = "video disabled (--no-video)";
+    }
+#endif
+
     state_.store(EngineState::Running);
     log::info(kComp, "running; waiting for control connection");
 
@@ -93,6 +138,9 @@ int Engine::run() {
 
     state_.store(EngineState::Stopping);
     log::info(kComp, "stopping");
+#if defined(LIVECORE_HAS_VIDEO)
+    video_.reset();
+#endif
     clock.request_stop();
     watchdog.request_stop();
     clock.join();
@@ -192,6 +240,16 @@ Engine::SessionEnd Engine::serve(ipc::PipeConnection& conn) {
                 state_.store(EngineState::Stopping);
                 send(conn, MessageType::ShutdownAck, h.requestId, "{}");
                 return SessionEnd::ShutdownRequested;
+            case MessageType::ListVideoDevices:
+            case MessageType::AddSource:
+            case MessageType::RemoveSource:
+            case MessageType::SetPreview:
+            case MessageType::SetProgram:
+            case MessageType::Cut:
+            case MessageType::AutoTransition:
+            case MessageType::GetSwitcherState:
+                ok = handleVideo(conn, h, *body);
+                break;
             default:
                 ok = sendError(conn, h.requestId, "unknown_message",
                                std::format("message type {} is not supported", static_cast<int>(h.type)));
@@ -199,6 +257,65 @@ Engine::SessionEnd Engine::serve(ipc::PipeConnection& conn) {
         }
         if (!ok) return SessionEnd::ClientGone;
     }
+}
+
+}  // namespace livecore::engine
+
+namespace livecore::engine {
+
+bool Engine::handleVideo(ipc::PipeConnection& conn, const protocol::Header& h, const json::Object& body) {
+    using protocol::MessageType;
+#if defined(LIVECORE_HAS_VIDEO)
+    if (!video_) return sendError(conn, h.requestId, "video_unavailable", videoError_);
+    auto& sw = video_->switcher();
+    const auto sourceId = static_cast<video::SourceId>(body.getInt("sourceId").value_or(0));
+    auto okOr = [&](bool success, std::string_view code, std::string_view message) {
+        return success ? send(conn, MessageType::Ok, h.requestId, "{}") : sendError(conn, h.requestId, code, message);
+    };
+    switch (h.type) {
+        case MessageType::ListVideoDevices: {
+            std::string err;
+            const std::string devices = video::VideoPipeline::listDevicesJson(err);
+            if (!err.empty()) return sendError(conn, h.requestId, "device_enumeration_failed", err);
+            return send(conn, MessageType::VideoDevices, h.requestId, json::Writer().addRaw("devices", devices).str());
+        }
+        case MessageType::AddSource: {
+            video::AddSourceRequest req;
+            req.id = sourceId;
+            req.kind = body.getString("kind").value_or("");
+            req.name = body.getString("name").value_or("");
+            req.pattern = body.getString("pattern").value_or("bars");
+            parseColor(body.getString("color").value_or("#000000"), req.r, req.g, req.b);
+            req.deviceId = body.getString("deviceId").value_or("");
+            video::SourceId assigned = 0;
+            std::string err;
+            if (!video_->addSource(req, assigned, err)) return sendError(conn, h.requestId, "add_source_failed", err);
+            return send(conn, MessageType::SourceAdded, h.requestId,
+                        json::Writer().add("sourceId", static_cast<std::int64_t>(assigned)).str());
+        }
+        case MessageType::RemoveSource:
+            return okOr(video_->removeSource(sourceId), "unknown_source", "no such source");
+        case MessageType::SetPreview:
+            return okOr(sw.setPreview(sourceId), "unknown_source", "no such source");
+        case MessageType::SetProgram:
+            return okOr(sw.setProgram(sourceId), "unknown_source", "no such source");
+        case MessageType::Cut:
+            sw.cut();
+            return send(conn, MessageType::Ok, h.requestId, "{}");
+        case MessageType::AutoTransition: {
+            const auto ms = std::clamp<std::int64_t>(body.getInt("durationMs").value_or(1000), 0, 10'000);
+            return okOr(sw.autoTransition(std::chrono::milliseconds(ms), std::chrono::steady_clock::now()),
+                        "transition_rejected", "a transition is already running or preview is empty");
+        }
+        case MessageType::GetSwitcherState:
+            return send(conn, MessageType::SwitcherState, h.requestId, video_->stateJson());
+        default:
+            return sendError(conn, h.requestId, "unknown_message", "unsupported video message");
+    }
+#else
+    (void)body;
+    return sendError(conn, h.requestId, "video_unavailable", videoError_);
+#endif
 }
 
 }  // namespace livecore::engine

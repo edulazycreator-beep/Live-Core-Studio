@@ -24,6 +24,19 @@ enum class MessageType : std::uint16_t {
     Status = 6,
     Shutdown = 7,
     ShutdownAck = 8,
+    Ok = 9,
+    // Video / production (Phase 4)
+    ListVideoDevices = 16,
+    VideoDevices = 17,
+    AddSource = 18,
+    SourceAdded = 19,
+    RemoveSource = 20,
+    SetPreview = 22,
+    SetProgram = 23,
+    Cut = 24,
+    AutoTransition = 25,
+    GetSwitcherState = 26,
+    SwitcherState = 27,
     Error = 255,
 };
 

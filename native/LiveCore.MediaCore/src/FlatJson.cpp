@@ -230,6 +230,28 @@ Writer& Writer::add(std::string_view k, std::int64_t value) {
     return *this;
 }
 
+Writer& Writer::add(std::string_view k, double value) {
+    key(k);
+    body_ += std::isfinite(value) ? std::format("{:.6g}", value) : std::string("null");
+    return *this;
+}
+
+Writer& Writer::addRaw(std::string_view k, std::string_view json) {
+    key(k);
+    body_ += json;
+    return *this;
+}
+
+std::string array(const std::vector<std::string>& items) {
+    std::string out = "[";
+    for (std::size_t i = 0; i < items.size(); ++i) {
+        if (i) out += ',';
+        out += items[i];
+    }
+    out += ']';
+    return out;
+}
+
 Writer& Writer::add(std::string_view k, bool value) {
     key(k);
     body_ += value ? "true" : "false";

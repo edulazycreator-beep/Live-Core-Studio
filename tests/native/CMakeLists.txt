@@ -1,5 +1,5 @@
 add_executable(livecore_core_tests test_main.cpp)
-target_link_libraries(livecore_core_tests PRIVATE LiveCore.MediaCore livecore_warnings)
+target_link_libraries(livecore_core_tests PRIVATE LiveCore.MediaCore LiveCore.VideoCore livecore_warnings)
 target_include_directories(livecore_core_tests PRIVATE ${CMAKE_SOURCE_DIR}/native/LiveCore.MediaEngine/src)
 if(MINGW)
     target_link_options(livecore_core_tests PRIVATE -static)
